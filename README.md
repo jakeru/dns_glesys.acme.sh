@@ -1,6 +1,6 @@
 # DNS API to GleSYS for acme.sh
 
-This implements the needed functionality for the acme.sh to generate
+This implements the needed functionality for acme.sh to generate
 certificates using DNS-01 API for GleSYS users.
 
 The acme.sh script is available here:
@@ -12,9 +12,9 @@ https://github.com/glesys/api/wiki/Api-Introduction
 ## Dependencies
 
 This script depends on the utility jq (https://stedolan.github.io/jq/) to be
-present on the system. I needed this functionality on my Ubiqity EdgeRouter and
-the utility happened to be available on it so I decided to use it instead of
-decoding the JSON responses manually.
+present on the system. I needed this functionality on my Ubiquiti EdgeRouter and
+the utility jq happened to be available on it so I decided to make use of it
+instead of decoding the JSON responses manually.
 
 ## How to use
 
@@ -28,7 +28,7 @@ API key needs a few domain permissions:
 Remember to also give your own IP address access to use this token.
 
 Put the script dns_gleys.sh (or make a symlink) in the directory dnsapi which
-you should found in the acme.sh directory (after you have downloaded it).
+you should find in the acme.sh directory (after you have downloaded it).
 
 Run acme.sh like this:
 
@@ -38,6 +38,6 @@ export Glesys_Token=<GleSYS API token>
 acme.sh --issue --dns dns_glesys -d example.com
 ```
 
-Or, if you want to generate and use the certificate on your Ubiqitu EdgeRouter
+Or, if you want to generate and use the certificate on your Ubiquiti EdgeRouter
 like me, follow this great guide:
 https://github.com/hungnguyenm/edgemax-acme
