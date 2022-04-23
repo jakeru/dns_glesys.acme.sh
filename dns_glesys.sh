@@ -64,7 +64,11 @@ dns_glesys_rm() {
 
   _debug "Record id to delete: $_dns_glesys_rm_recordid"
 
-  _body="{\"recordid\":\"$_dns_glesys_rm_recordid\"}"
+  while IFS= read -r line; do
+    _body="{\"recordid\":\"$line\"}"
+  done <<< "$_dns_glesys_rm_recordid"
+
+#  _body="{\"recordid\":\"$_dns_glesys_rm_recordid\"}"
   _glesys_rest "$_body" "domain/deleterecord"
 
   return 0
