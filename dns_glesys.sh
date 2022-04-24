@@ -58,19 +58,47 @@ dns_glesys_rm() {
     return 1
   fi
 
-  _body="{\"domainname\":\"$_glesys_domain\"}"
-  _glesys_rest "$_body" "domain/listrecords"
-  _dns_glesys_rm_recordid=$(echo "$_response" | jq ".response.records[]|select(.host==\"$_glesys_host\")|.recordid")
+  if ! _glesys_get_record_id "$_glesys_domain" "$_glesys_host" "TXT" "$txtvalue"; then
+    return 1
+  fi
 
-  _debug "Record id to delete: $_dns_glesys_rm_recordid"
+  _debug "record id to delete: $_glesys_record_id"
 
-  _body="{\"recordid\":\"$_dns_glesys_rm_recordid\"}"
-  _glesys_rest "$_body" "domain/deleterecord"
+  _body="{\"recordid\":\"$_glesys_record_id\"}"
+  if ! _glesys_rest "$_body" "domain/deleterecord"; then
+    return 1
+  fi
 
   return 0
 }
 
 ####################  Private functions below ##################################
+
+# Usage:
+#  _glesys_get_domain domain host record_type record_data
+#  Example usage:
+#  _glesys_get_domain example.com sub TXT abcdfg
+# Returns:
+#  _glesys_record_id=123456
+_glesys_get_record_id() {
+  domain=$1
+  host=$2
+  record_type=$3
+  record_data=$4
+
+  _body="{\"domainname\":\"$domain\"}"
+  if ! _glesys_rest "$_body" "domain/listrecords"; then
+    return 1
+  fi
+
+  _glesys_record_id=$(echo "$_response" | jq ".response.records[] \
+    |select(.host==\"$host\") \
+    |select(.type==\"$record_type\") \
+    |select(.data==\"$record_data\") \
+    |.recordid")
+
+  return 0
+}
 
 # Usage:
 #  fulldomain="sub.example.com"
