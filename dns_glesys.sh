@@ -28,6 +28,11 @@ dns_glesys_add() {
     return 1
   fi
 
+  if ! command -v jq; then
+    _err "Cannot find jq. Please install jq, the Command-line JSON processor"
+    return 1
+  fi
+
   # Now save the credentials.
   _saveaccountconf_mutable Glesys_Token "$Glesys_Token"
   _saveaccountconf_mutable Glesys_User "$Glesys_User"
