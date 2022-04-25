@@ -28,6 +28,11 @@ dns_glesys_add() {
     return 1
   fi
 
+  if ! command -v jq; then
+    _err "Cannot find jq. Please install jq, the Command-line JSON processor"
+    return 1
+  fi
+
   # Now save the credentials.
   _saveaccountconf_mutable Glesys_Token "$Glesys_Token"
   _saveaccountconf_mutable Glesys_User "$Glesys_User"
@@ -37,10 +42,12 @@ dns_glesys_add() {
   fi
 
   _body="{\"domainname\":\"$_glesys_domain\",\"host\":\"$_glesys_host\",\"type\":\"TXT\",\"ttl\":300,\"data\":\"$txtvalue\"}"
-  _glesys_rest "$_body" "domain/addrecord"
+  if ! _glesys_rest "$_body" "domain/addrecord"; then
+    return 1
+  fi
 
   _dns_glesys_recordid=$(echo "$_response" | jq .response.record.recordid)
-  _debug "recordid of added record: $_dns_glesys_recordid"
+  _debug "record id of added record: $_dns_glesys_recordid"
 
   return 0
 }
@@ -51,8 +58,6 @@ dns_glesys_add() {
 dns_glesys_rm() {
   fulldomain=$1
   txtvalue=$2
-
-  _info "Deleting record $fulldomain"
 
   if ! _glesys_get_domain; then
     return 1
@@ -107,8 +112,8 @@ _glesys_get_record_id() {
 #  _glesys_domain=example.com
 #  _glesys_host=sub
 _glesys_get_domain() {
-  _glesys_domain="$(echo $fulldomain | rev | cut -d . -f 1,2 | rev)"
-  _glesys_host="$(echo $fulldomain | rev | cut -d . -f 3- | rev)"
+  _glesys_domain="$(echo "$fulldomain" | rev | cut -d . -f 1,2 | rev)"
+  _glesys_host="$(echo "$fulldomain" | rev | cut -d . -f 3- | rev)"
 
   if [ -z "$_glesys_domain" ]; then
     _err "Error extracting the domain."
@@ -130,12 +135,16 @@ _glesys_rest() {
   _realm="$(printf "%s" "$Glesys_User:$Glesys_Token" | _base64)"
   export _H1="Authorization: Basic $_realm"
   export _H2="Content-Type: application/json"
+  _debug "request $2: $1"
   _response=$(_post "$1" "https://api.glesys.com/$2")
 
   _code=$(echo "$_response" | jq .response.status.code)
+  _debug "response $_code: $_response"
 
   if [ "$_code" != "200" ]; then
-    _err "Bad response: $response"
+    _err "bad response: $_code for request to path: $2"
+    _err "request: $1"
+    _err "response: $_response"
     return 1
   fi
 
